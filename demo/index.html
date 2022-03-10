@@ -29,12 +29,27 @@
 
       <div class="box">
         <button id="startCameraButton">Start Camera</button>
-        <button id="startScreenCaptureButton">Start Screen-capture</button>
+        <button id="startScreenCaptureButton">Start Capture</button>
         <button id="callButton">Call</button>
         <button id="hangupButton">Hang Up</button>
         <button id="motionButton">Motion</button>
         <button id="detailButton">Detail</button>
         <button id="textButton">Text</button>
+      </div>
+      <div class="box">
+        <label>Bandwidth:</label>
+        <select id="bandwidthSelector">
+          <option value="unlimited" selected>unlimited</option>
+          <option value="2000">2000</option>
+          <option value="1000">1000</option>
+          <option value="500">500</option>
+          <option value="250">250</option>
+          <option value="125">125</option>
+          <option value="75">75</option>
+          <option value="50">50</option>
+          <option value="15">15</option>
+        </select>
+        kbps
       </div>
 
       <p>
@@ -70,6 +85,7 @@
       const motionButton = document.getElementById("motionButton");
       const detailButton = document.getElementById("detailButton");
       const textButton = document.getElementById("textButton");
+      const bandwidthSelector = document.getElementById("bandwidthSelector");
       callButton.disabled = true;
       hangupButton.disabled = true;
       startCameraButton.addEventListener("click", startCamera);
@@ -79,6 +95,7 @@
       motionButton.addEventListener("click", motion);
       detailButton.addEventListener("click", detail);
       textButton.addEventListener("click", text);
+      bandwidthSelector.onchange = updateBandwidthLimit;
 
       let startTime;
       const localVideo = document.getElementById("localVideo");
@@ -142,7 +159,7 @@
         try {
           let stream;
           if (target == "camera") {
-            stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
           } else {
             stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
           }
@@ -158,6 +175,7 @@
       async function call() {
         callButton.disabled = true;
         hangupButton.disabled = false;
+        bandwidthSelector.disabled = false;
         console.log("Starting call");
         startTime = window.performance.now();
         const videoTracks = localStream.getVideoTracks();
@@ -190,6 +208,8 @@
         } catch (e) {
           onCreateSessionDescriptionError(e);
         }
+
+        updateBandwidthLimit();
       }
 
       function onCreateSessionDescriptionError(error) {
@@ -296,6 +316,7 @@
         pc2.close();
         pc1 = null;
         pc2 = null;
+        bandwidthSelector.disabled = true;
         hangupButton.disabled = true;
         callButton.disabled = false;
       }
@@ -314,10 +335,28 @@
 
       function setContentHint(hint) {
         if (!localStream) {
-            return;
+          return;
         }
         const [track] = localStream.getVideoTracks();
         track.contentHint = hint;
+      }
+
+      function updateBandwidthLimit() {
+        const bandwidth = bandwidthSelector.options[bandwidthSelector.selectedIndex].value;
+        const sender = pc1.getSenders()[0];
+        const parameters = sender.getParameters();
+        console.log(`parameters = ${JSON.stringify(parameters)}`);
+        if (!parameters.encodings) {
+          parameters.encodings = [{}];
+        }
+        if (bandwidth == "unlimited") {
+          delete parameters.encodings[0].maxBitrate;
+          console.log("Bandwidth: unlimited");
+        } else {
+          parameters.encodings[0].maxBitrate = bandwidth * 1000;
+          console.log(`Bandwidth: ${parameters.encodings[0].maxBitrate}`);
+        }
+        sender.setParameters(parameters);
       }
     </script>
   </body>
