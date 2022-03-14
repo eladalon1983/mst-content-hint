@@ -24,14 +24,12 @@
         >.
       </p>
 
-      <video id="localVideo" playsinline autoplay muted></video>
+      <video id="localVideo" playsinline autoplay muted hidden></video>
       <video id="remoteVideo" playsinline autoplay></video>
 
       <div class="box">
         <button id="startCameraButton">Start Camera</button>
         <button id="startScreenCaptureButton">Start Capture</button>
-        <button id="callButton">Call</button>
-        <button id="hangupButton">Hang Up</button>
         <button id="motionButton">Motion</button>
         <button id="detailButton">Detail</button>
         <button id="textButton">Text</button>
@@ -80,18 +78,12 @@
 
       const startCameraButton = document.getElementById("startCameraButton");
       const startScreenCaptureButton = document.getElementById("startScreenCaptureButton");
-      const callButton = document.getElementById("callButton");
-      const hangupButton = document.getElementById("hangupButton");
       const motionButton = document.getElementById("motionButton");
       const detailButton = document.getElementById("detailButton");
       const textButton = document.getElementById("textButton");
       const bandwidthSelector = document.getElementById("bandwidthSelector");
-      callButton.disabled = true;
-      hangupButton.disabled = true;
       startCameraButton.addEventListener("click", startCamera);
       startScreenCaptureButton.addEventListener("click", startScreenCapture);
-      callButton.addEventListener("click", call);
-      hangupButton.addEventListener("click", hangup);
       motionButton.addEventListener("click", motion);
       detailButton.addEventListener("click", detail);
       textButton.addEventListener("click", text);
@@ -170,11 +162,10 @@
         } catch (e) {
           alert(`getUserMedia() error: ${e.name}`);
         }
+        call();
       }
 
       async function call() {
-        callButton.disabled = true;
-        hangupButton.disabled = false;
         bandwidthSelector.disabled = false;
         console.log("Starting call");
         startTime = window.performance.now();
@@ -310,27 +301,25 @@
         }
       }
 
-      function hangup() {
-        console.log("Ending call");
-        pc1.close();
-        pc2.close();
-        pc1 = null;
-        pc2 = null;
-        bandwidthSelector.disabled = true;
-        hangupButton.disabled = true;
-        callButton.disabled = false;
-      }
-
       function motion() {
         setContentHint("motion");
+        motionButton.style = "background-color: green";
+        detailButton.style = "background-color: #d84a38";
+        textButton.style = "background-color: #d84a38";
       }
 
       function detail() {
         setContentHint("detail");
+        motionButton.style = "background-color: #d84a38";
+        detailButton.style = "background-color: green";
+        textButton.style = "background-color: #d84a38";
       }
 
       function text() {
         setContentHint("text");
+        motionButton.style = "background-color: #d84a38";
+        detailButton.style = "background-color: #d84a38";
+        textButton.style = "background-color: green";
       }
 
       function setContentHint(hint) {
